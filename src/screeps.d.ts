@@ -1,22 +1,24 @@
 /************************************************** 系统Memory扩展 **************************************************/
 //系统Memory
 interface Memory {
+    creeps: { [id: string]: CreepMemory };
     sources: { [id: string]: SourceMemory };
     dropedResource: { [id: string]: RoomPosition };
-    minerals: { [id: string]: RoomPosition };
+    minerals: { [id: string]: MineralMemory };
 }
 
 // CreepMemory扩展
 interface CreepMemory {
     name: string;
-    role: string;
     working: boolean;
+    role: CreepRoleConstant;
+    work(): void
 }
 
-interface FlagMemory {}
-interface RoomMemory {}
-interface SpawnMemory {}
-interface PowerCreepMemory {}
+interface FlagMemory { }
+interface RoomMemory { }
+interface SpawnMemory { }
+interface PowerCreepMemory { }
 
 /************************************************** 挖矿相关 **************************************************/
 // 挖矿工位

@@ -10,4 +10,4 @@ export const BUILDER_NAME_PERFIX: string = "BUILDER";
 export const FILLER_NAME_PERFIX: string = "FILLER";
 export const SUPPORTER_NAME_PERFIX: string = "SUPPORTER";
 
-export const ROOM_MAIN_ID: string = "E4N52";
+export const ROOM_MAIN_ID: string = "W2N2";

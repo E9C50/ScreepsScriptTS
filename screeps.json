@@ -5,6 +5,15 @@
     "hostname": "screeps.com",
     "port": 443,
     "path": "/",
-    "branch": "ts-test"
+    "branch": "default"
+  },
+  "pserver": {
+    "email": "E9C50",
+    "password": "jasonFX3A87WLQ",
+    "protocol": "http",
+    "hostname": "localhost",
+    "port": 21025,
+    "path": "/",
+    "branch": "main"
   }
 }

@@ -1,0 +1,26 @@
+servers:
+  main:
+    host: screeps.com
+    secure: true
+    token: '00000000-0a0a-0a00-000a-a0000a0000a0'
+  ptr:
+    host: screeps.com
+    secure: true
+    path: '/ptr'
+    token: '00000000-0a0a-0a00-000a-a0000a0000a0'
+  season:
+    host: screeps.com
+    secure: true
+    path: '/season'
+    token: '00000000-0a0a-0a00-000a-a0000a0000a0'
+  private:
+    host: 127.0.0.1
+    port: 21025
+    secure: false
+    username: E9C50
+    password: jasonFX3A87WLQ
+configs:
+  multimeter:
+    plugins: []
+    aliases: {}
+    logFilename: 'multimeter.log'

@@ -17,13 +17,23 @@ function havisteCloseActiveResource(creep: Creep): Source | null {
     return closeSource;
 }
 
-function work(creepName: string): void {
-    let creep: Creep = Game.creeps[creepName];
+class HavisterCreep implements CreepMemory {
+    name: string;
+    working: boolean;
+    role: CreepRoleConstant;
 
-    // 如果
-    if (creep.store.getFreeCapacity() > 0) {
-        havisteCloseActiveResource(creep);
+    constructor(name: string) {
+        this.name = name
+        this.working = false
+        this.role = "ROLE_HARVESTER"
+    }
+
+    work() {
+        let creep: Creep = Game.creeps[this.name];
+
+        // 如果
+        if (creep.store.getFreeCapacity() > 0) {
+            havisteCloseActiveResource(creep);
+        }
     }
 }
-
-export {};

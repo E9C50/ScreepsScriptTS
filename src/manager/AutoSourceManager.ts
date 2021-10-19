@@ -1,13 +1,35 @@
-import { ROOM_MAIN_ID } from "Constant";
+import { ROOM_MAIN_ID } from "ConfigConstant";
+import { time } from "console";
 
 function getAllStations(source: Source | Mineral): { [name: string]: WorkStations } {
-    return {
-        "": {
-            position: source.pos,
-            hasCreep: true,
-            hasContainer: true,
-        },
-    };
+    let allStations: { [name: string]: WorkStations } = {}
+
+    let centerPos = source.pos;
+    let roundPosition: Map<string, RoomPosition> = new Map<string, RoomPosition>([
+        ['leftDownPos', new RoomPosition(centerPos.x - 1, centerPos.y + 1, ROOM_MAIN_ID)],
+        ['downPos', new RoomPosition(centerPos.x, centerPos.y + 1, ROOM_MAIN_ID)],
+        ['rightDownPos', new RoomPosition(centerPos.x + 1, centerPos.y + 1, ROOM_MAIN_ID)],
+        ['leftPos', new RoomPosition(centerPos.x - 1, centerPos.y, ROOM_MAIN_ID)],
+        ['rightPos', new RoomPosition(centerPos.x + 1, centerPos.y, ROOM_MAIN_ID)],
+        ['leftUpPos', new RoomPosition(centerPos.x - 1, centerPos.y - 1, ROOM_MAIN_ID)],
+        ['upPos', new RoomPosition(centerPos.x, centerPos.y - 1, ROOM_MAIN_ID)],
+        ['rightUpPos', new RoomPosition(centerPos.x + 1, centerPos.y - 1, ROOM_MAIN_ID)]
+    ]);
+
+    roundPosition.forEach((position, key) => {
+        let terrain: Terrain = position.lookFor(LOOK_TERRAIN)[0];
+        let haveCreep: boolean = position.lookFor(LOOK_CREEPS).length > 0;
+        let hasContainer: boolean = position.lookFor(LOOK_CONSTRUCTION_SITES).length > 0;
+        if (terrain != 'wall') {
+            allStations[key] = {
+                position: source.pos,
+                hasCreep: haveCreep,
+                hasContainer: hasContainer
+            }
+        }
+    })
+
+    return allStations;
 }
 
 function autoSourcesManagerRun(): void {
@@ -27,11 +49,11 @@ function autoSourcesManagerRun(): void {
 
     for (const index in allDropedResource) {
         let resource = allDropedResource[index];
-        console.log("resource_" + resource.id);
+        // console.log("resource_" + resource.id);
     }
     for (const index in allMinerals) {
         let mineral = allMinerals[index];
-        console.log("mineral_" + mineral.id);
+        // console.log("mineral_" + mineral.id);
     }
 }
 
