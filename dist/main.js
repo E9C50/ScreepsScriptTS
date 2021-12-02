@@ -2331,6 +2331,128 @@ class ErrorMapper {
 // Cache previously mapped traces to improve performance
 ErrorMapper.cache = {};
 
+let HARVESTER_MAX_COUNT = 4;
+let UPGRADER_MAX_COUNT = 2;
+let BUILDER_MAX_COUNT = 2;
+let SUPPORTER_MAX_COUNT = 1;
+const ROOM_MAIN_ID = "W2N2";
+function autoComputeCreepMaxCount() {
+    let maxHarvesterMaxCount = 0;
+    for (let index in Memory.sources) {
+        maxHarvesterMaxCount += Object.keys(Memory.sources[index].stations).length;
+    }
+    HARVESTER_MAX_COUNT = maxHarvesterMaxCount;
+}
+
+const HarvesterRole = "ROLE_HARVESTER";
+function HavisterOrBuild(creep) {
+    if (!Memory.creeps[creep.name].working) {
+        havisteCloseActiveResource(creep);
+        return;
+    }
+    let closeSource = creep.pos.findClosestByRange(creep.room.find(FIND_SOURCES_ACTIVE));
+    if (closeSource == null) {
+        return;
+    }
+    creep.harvest(closeSource);
+    if (creep.pos.lookFor(LOOK_STRUCTURES).length > 0) {
+        // console.log(creep.pos + " havisting...")
+        creep.drop(RESOURCE_ENERGY);
+    }
+    else if (creep.pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) {
+        // console.log(creep.pos + " building...")
+        creep.build(creep.pos.lookFor(LOOK_CONSTRUCTION_SITES)[0]);
+    }
+    else {
+        // console.log(creep.pos + " created...")
+        Game.rooms[ROOM_MAIN_ID].createConstructionSite(creep.pos, STRUCTURE_CONTAINER);
+    }
+}
+function havisteCloseActiveResource(creep) {
+    console.log(creep.name + ' is moving to source...');
+    let closeSource = creep.pos.findClosestByRange(creep.room.find(FIND_SOURCES_ACTIVE));
+    if (closeSource === null || closeSource === void 0 ? void 0 : closeSource.pos.isNearTo(creep)) {
+        Memory.creeps[creep.name].working = true;
+        return;
+    }
+    let closeFreeSource = creep.pos.findClosestByRange(creep.room.find(FIND_SOURCES_ACTIVE).filter(function (source) {
+        let hasStations = false;
+        let stations = Memory.sources[source.id].stations;
+        for (let index in stations) {
+            if (!stations[index].hasCreep) {
+                hasStations = true;
+            }
+        }
+        return hasStations;
+    }));
+    if (closeFreeSource == null) {
+        console.log("Can not find any active source.");
+        return;
+    }
+    if (creep.pos.getRangeTo(closeFreeSource.pos) > 0) {
+        creep.moveTo(closeFreeSource);
+    }
+    return;
+}
+function buildHarvesterBodys() {
+    return [WORK, CARRY, MOVE];
+}
+
+const UpgraderRole = "ROLE_UPGRADER";
+function UpgradeController(creep) {
+    if (Memory.creeps[creep.name].working && creep.room.controller) {
+        if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(creep.room.controller);
+        }
+        if (creep.store.energy == 0) {
+            Memory.creeps[creep.name].working = false;
+        }
+        return;
+    }
+    let allStoreContainer = creep.room.find(FIND_STRUCTURES).filter(function (structure) {
+        return structure.structureType == STRUCTURE_CONTAINER && structure.store.energy > 0;
+    });
+    let closeStoreContainer = creep.pos.findClosestByPath(allStoreContainer);
+    if (closeStoreContainer != null) {
+        creep.moveTo(closeStoreContainer);
+    }
+}
+function buildUpgraderBodys() {
+    return [WORK, CARRY, MOVE];
+}
+
+function randomName(namePrefix) {
+    let minNum = 100000;
+    let maxNum = 999999;
+    return namePrefix + '_' + parseInt((Math.random() * (maxNum - minNum + 1) + minNum).toString(), 10).toString();
+}
+
+function createCreep(creepRole, creepRoles) {
+    let creepName = randomName(creepRole);
+    let spawnResult = Game.spawns.Spawn.spawnCreep(creepRoles, creepName);
+    if (spawnResult == OK) {
+        Memory.creeps[creepName] = {
+            'name': creepName,
+            'working': false,
+            'role': creepRole
+        };
+        console.log('build creep: ' + creepName + ' - ' + spawnResult);
+    }
+}
+function autoCreepsSpawn() {
+    var myCreeps = [];
+    for (var name in Memory.creeps) {
+        myCreeps.push(Memory.creeps[name]);
+    }
+    if (myCreeps.filter(function (creep) { return creep.role == HarvesterRole; }).length < HARVESTER_MAX_COUNT) {
+        createCreep(HarvesterRole, buildHarvesterBodys());
+    }
+    else if (myCreeps.filter(function (creep) { return creep.role == UpgraderRole; }).length < UPGRADER_MAX_COUNT) {
+        createCreep(UpgraderRole, buildUpgraderBodys());
+    }
+    else if (myCreeps.filter(function (creep) { return creep.role == "ROLE_BUILDER"; }).length < BUILDER_MAX_COUNT) ;
+    else if (myCreeps.filter(function (creep) { return creep.role == "ROLE_SUPPORTER"; }).length < SUPPORTER_MAX_COUNT) ;
+}
 function autoDeleteMissingCreeps() {
     for (const name in Memory.creeps) {
         if (!(name in Game.creeps)) {
@@ -2338,12 +2460,23 @@ function autoDeleteMissingCreeps() {
         }
     }
 }
+function autoCreepsWork() {
+    for (const name in Memory.creeps) {
+        let creep = Game.creeps[name];
+        let creepMemory = Memory.creeps[name];
+        if (creepMemory.role == HarvesterRole) {
+            HavisterOrBuild(creep);
+        }
+        else if (creepMemory.role == UpgraderRole) {
+            UpgradeController(creep);
+        }
+    }
+}
 function autoCreepsManagerRun() {
     autoDeleteMissingCreeps();
-    Memory.creeps;
+    autoCreepsSpawn();
+    autoCreepsWork();
 }
-
-const ROOM_MAIN_ID = "W2N2";
 
 function getAllStations(source) {
     let allStations = {};
@@ -2376,6 +2509,7 @@ function autoSourcesManagerRun() {
     let allSource = Game.rooms[ROOM_MAIN_ID].find(FIND_SOURCES);
     let allMinerals = Game.rooms[ROOM_MAIN_ID].find(FIND_MINERALS);
     let allDropedResource = Game.rooms[ROOM_MAIN_ID].find(FIND_DROPPED_RESOURCES);
+    Memory.sources = {};
     for (const index in allSource) {
         let source = allSource[index];
         Memory.sources[source.id] = {
@@ -2397,8 +2531,9 @@ function autoSourcesManagerRun() {
 
 const loop = ErrorMapper.wrapLoop(() => {
     console.log(`--------------- tick_${Game.time} ---------------`);
-    autoCreepsManagerRun();
+    autoComputeCreepMaxCount();
     autoSourcesManagerRun();
+    autoCreepsManagerRun();
 });
 
 exports.loop = loop;

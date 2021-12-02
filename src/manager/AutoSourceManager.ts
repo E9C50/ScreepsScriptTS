@@ -1,5 +1,4 @@
 import { ROOM_MAIN_ID } from "ConfigConstant";
-import { time } from "console";
 
 function getAllStations(source: Source | Mineral): { [name: string]: WorkStations } {
     let allStations: { [name: string]: WorkStations } = {}
@@ -37,6 +36,7 @@ function autoSourcesManagerRun(): void {
     let allMinerals: Mineral[] = Game.rooms[ROOM_MAIN_ID].find(FIND_MINERALS);
     let allDropedResource: Resource[] = Game.rooms[ROOM_MAIN_ID].find(FIND_DROPPED_RESOURCES);
 
+    Memory.sources = {}
     for (const index in allSource) {
         let source = allSource[index];
         Memory.sources[source.id] = {

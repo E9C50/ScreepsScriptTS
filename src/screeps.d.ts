@@ -12,7 +12,6 @@ interface CreepMemory {
     name: string;
     working: boolean;
     role: CreepRoleConstant;
-    work(): void
 }
 
 interface FlagMemory { }
